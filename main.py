@@ -66,7 +66,8 @@ MODELS = {
 # ══════════════════════════════════════
 # HEALTH SERVER
 # ══════════════════════════════════════
-WEBHOOK_URL = f"https://ayoub5550-omni-cloud-agent.hf.space/webhook"
+WEBHOOK_URL = "https://ayoub5550-omni-cloud-agent.hf.space/webhook"
+WEBHOOK_PATH = "/webhook"
 
 # ══════════════════════════════════════
 # LLM ENGINE — Parallel model calls for speed
@@ -851,15 +852,42 @@ async def handle_photo(update, context):
 # MAIN
 # ══════════════════════════════════════
 
-def main():
+import aiohttp.web as web
+
+# Global reference to the telegram Application
+tg_app: Application | None = None
+tg_ready = False
+
+
+async def health_handler(request):
+    """Health endpoint — responds immediately so HF keeps the container alive."""
+    return web.json_response({
+        "status": "running" if tg_ready else "starting",
+        "v": "2.0",
+        "model": LLM_MODEL,
+        "tools": len(TOOLS),
+        "webhook": tg_ready,
+    })
+
+
+async def webhook_handler(request):
+    """Receive Telegram updates via webhook."""
+    if not tg_ready or tg_app is None:
+        return web.Response(status=503, text="Bot not ready")
+    try:
+        data = await request.json()
+        update = Update.de_json(data, tg_app.bot)
+        await tg_app.process_update(update)
+    except Exception as e:
+        log.error(f"Webhook error: {e}")
+    return web.Response(status=200, text="ok")
+
+
+async def init_telegram_bot():
+    """Connect to Telegram with retries, then set webhook. Runs in background."""
+    global tg_app, tg_ready
     from telegram.request import HTTPXRequest
 
-    log.info("=" * 50)
-    log.info(f"OmniCloud AI v2 — WEBHOOK MODE")
-    log.info(f"Model: {LLM_MODEL} | Port: {PORT} | Tools: {len(TOOLS)}")
-    log.info("=" * 50)
-
-    # Connected platforms summary
     platforms = []
     if FLY_TOKEN: platforms.append("✈️ Fly.io")
     if GITHUB_TOKEN: platforms.append("🐙 GitHub")
@@ -869,28 +897,48 @@ def main():
     if NORTHFLANK_TOKEN: platforms.append("🏗 Northflank")
     if BACK4APP_TOKEN: platforms.append("📦 Back4App")
 
-    # Build app with generous timeouts
-    request = HTTPXRequest(connect_timeout=60, read_timeout=60, write_timeout=60, pool_timeout=60)
-    app = Application.builder().token(BOT_TOKEN).request(request).build()
+    for attempt in range(10):
+        try:
+            log.info(f"Telegram connect attempt {attempt + 1}/10...")
+            request = HTTPXRequest(
+                connect_timeout=120, read_timeout=120,
+                write_timeout=120, pool_timeout=120,
+            )
+            app = Application.builder().token(BOT_TOKEN).request(request).build()
 
-    # Register handlers
-    for cmd, fn in [("start", cmd_start), ("help", cmd_start), ("status", cmd_status),
-                    ("clear", cmd_clear), ("model", cmd_model), ("run", cmd_run),
-                    ("sh", cmd_sh), ("img", cmd_img), ("platforms", cmd_platforms)]:
-        app.add_handler(CommandHandler(cmd, fn))
-    app.add_handler(CallbackQueryHandler(callback_handler))
-    app.add_handler(MessageHandler(filters.Document.ALL, handle_document))
-    app.add_handler(MessageHandler(filters.PHOTO, handle_photo))
-    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
+            # Register handlers
+            for cmd, fn in [("start", cmd_start), ("help", cmd_start), ("status", cmd_status),
+                            ("clear", cmd_clear), ("model", cmd_model), ("run", cmd_run),
+                            ("sh", cmd_sh), ("img", cmd_img), ("platforms", cmd_platforms)]:
+                app.add_handler(CommandHandler(cmd, fn))
+            app.add_handler(CallbackQueryHandler(callback_handler))
+            app.add_handler(MessageHandler(filters.Document.ALL, handle_document))
+            app.add_handler(MessageHandler(filters.PHOTO, handle_photo))
+            app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
 
-    # Post-init: notify owner
-    async def post_init(application):
-        for attempt in range(3):
+            # initialize() calls get_me() — this is what times out
+            await app.initialize()
+            log.info("Bot initialized ✓")
+
+            # Set webhook
+            await app.bot.set_webhook(
+                url=WEBHOOK_URL,
+                drop_pending_updates=True,
+                allowed_updates=["message", "callback_query"],
+            )
+            log.info(f"Webhook set → {WEBHOOK_URL}")
+
+            await app.start()
+            tg_app = app
+            tg_ready = True
+            log.info("🟢 Bot fully ready!")
+
+            # Notify owner
             try:
-                await application.bot.send_message(
+                await app.bot.send_message(
                     chat_id=OWNER_CHAT_ID,
                     text=(
-                        "🚀 *OmniCloud AI v2 — Online (Webhook)!*\n━━━━━━━━━━━━━━━━━\n\n"
+                        "🚀 *OmniCloud AI v2 — Online!*\n━━━━━━━━━━━━━━━━━\n\n"
                         f"🧠 `{LLM_MODEL.split('/')[-1]}`\n"
                         f"🛠 {len(TOOLS)} أداة\n"
                         f"☁️ {len(platforms)} منصات: {', '.join(platforms)}\n"
@@ -899,21 +947,42 @@ def main():
                     ),
                     parse_mode=ParseMode.MARKDOWN,
                 )
-                break
             except Exception as e:
-                log.warning(f"Notify attempt {attempt+1}: {e}")
-                time.sleep(5)
+                log.warning(f"Notify: {e}")
+            return  # success
 
-    app.post_init = post_init
+        except Exception as e:
+            log.error(f"Attempt {attempt + 1} failed: {e}")
+            try:
+                await app.shutdown()
+            except Exception:
+                pass
+            wait = min(15 * (attempt + 1), 120)
+            log.info(f"Retrying in {wait}s...")
+            await asyncio.sleep(wait)
 
-    log.info(f"Starting webhook on 0.0.0.0:{PORT} → {WEBHOOK_URL}")
-    app.run_webhook(
-        listen="0.0.0.0",
-        port=PORT,
-        url_path="/webhook",
-        webhook_url=WEBHOOK_URL,
-        drop_pending_updates=True,
-    )
+    log.error("All 10 attempts failed — bot will not respond to messages.")
+
+
+async def on_startup(app_web):
+    """Launch Telegram init as a background task (web server already running)."""
+    asyncio.create_task(init_telegram_bot())
+
+
+def main():
+    log.info("=" * 50)
+    log.info(f"OmniCloud AI v2 — WEBHOOK MODE")
+    log.info(f"Model: {LLM_MODEL} | Port: {PORT} | Tools: {len(TOOLS)}")
+    log.info("=" * 50)
+
+    # aiohttp web server — starts IMMEDIATELY, Telegram connects in background
+    app_web = web.Application()
+    app_web.router.add_get("/", health_handler)
+    app_web.router.add_post(WEBHOOK_PATH, webhook_handler)
+    app_web.on_startup.append(on_startup)
+
+    log.info(f"Starting web server on 0.0.0.0:{PORT}")
+    web.run_app(app_web, host="0.0.0.0", port=PORT, print=log.info)
 
 
 if __name__ == "__main__":
