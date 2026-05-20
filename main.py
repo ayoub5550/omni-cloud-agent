@@ -15,8 +15,6 @@ import base64
 import traceback
 import tempfile
 from datetime import datetime, timezone
-from http.server import HTTPServer, BaseHTTPRequestHandler
-from threading import Thread
 from pathlib import Path
 
 import httpx
@@ -68,16 +66,7 @@ MODELS = {
 # ══════════════════════════════════════
 # HEALTH SERVER
 # ══════════════════════════════════════
-class HealthHandler(BaseHTTPRequestHandler):
-    def do_GET(self):
-        self.send_response(200)
-        self.send_header("Content-Type", "application/json")
-        self.end_headers()
-        self.wfile.write(json.dumps({"status": "running", "v": "2.0", "model": LLM_MODEL, "tools": len(TOOLS)}).encode())
-    def log_message(self, *a): pass
-
-def start_health_server():
-    HTTPServer(("0.0.0.0", PORT), HealthHandler).serve_forever()
+WEBHOOK_URL = f"https://ayoub5550-omni-cloud-agent.hf.space/webhook"
 
 # ══════════════════════════════════════
 # LLM ENGINE — Parallel model calls for speed
@@ -862,19 +851,15 @@ async def handle_photo(update, context):
 # MAIN
 # ══════════════════════════════════════
 
-async def run_bot():
-    """Start bot with retry logic for Telegram API timeouts."""
+def main():
     from telegram.request import HTTPXRequest
 
-    log.info("="*50)
-    log.info(f"OmniCloud AI v2 | Model: {LLM_MODEL} | Port: {PORT} | Tools: {len(TOOLS)}")
-    log.info("="*50)
+    log.info("=" * 50)
+    log.info(f"OmniCloud AI v2 — WEBHOOK MODE")
+    log.info(f"Model: {LLM_MODEL} | Port: {PORT} | Tools: {len(TOOLS)}")
+    log.info("=" * 50)
 
-    # Start health server FIRST so HF sees container as alive
-    Thread(target=start_health_server, daemon=True).start()
-    log.info("Health server ✓")
-
-    # Connected platforms
+    # Connected platforms summary
     platforms = []
     if FLY_TOKEN: platforms.append("✈️ Fly.io")
     if GITHUB_TOKEN: platforms.append("🐙 GitHub")
@@ -884,63 +869,52 @@ async def run_bot():
     if NORTHFLANK_TOKEN: platforms.append("🏗 Northflank")
     if BACK4APP_TOKEN: platforms.append("📦 Back4App")
 
-    # Retry connection to Telegram (HF Space network can be slow)
-    for attempt in range(5):
-        try:
-            log.info(f"Connecting to Telegram (attempt {attempt+1}/5)...")
-            request = HTTPXRequest(connect_timeout=60, read_timeout=60, write_timeout=60, pool_timeout=60)
-            app = Application.builder().token(BOT_TOKEN).request(request).build()
+    # Build app with generous timeouts
+    request = HTTPXRequest(connect_timeout=60, read_timeout=60, write_timeout=60, pool_timeout=60)
+    app = Application.builder().token(BOT_TOKEN).request(request).build()
 
-            # Register handlers
-            for cmd, fn in [("start",cmd_start),("help",cmd_start),("status",cmd_status),
-                            ("clear",cmd_clear),("model",cmd_model),("run",cmd_run),
-                            ("sh",cmd_sh),("img",cmd_img),("platforms",cmd_platforms)]:
-                app.add_handler(CommandHandler(cmd, fn))
-            app.add_handler(CallbackQueryHandler(callback_handler))
-            app.add_handler(MessageHandler(filters.Document.ALL, handle_document))
-            app.add_handler(MessageHandler(filters.PHOTO, handle_photo))
-            app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
+    # Register handlers
+    for cmd, fn in [("start", cmd_start), ("help", cmd_start), ("status", cmd_status),
+                    ("clear", cmd_clear), ("model", cmd_model), ("run", cmd_run),
+                    ("sh", cmd_sh), ("img", cmd_img), ("platforms", cmd_platforms)]:
+        app.add_handler(CommandHandler(cmd, fn))
+    app.add_handler(CallbackQueryHandler(callback_handler))
+    app.add_handler(MessageHandler(filters.Document.ALL, handle_document))
+    app.add_handler(MessageHandler(filters.PHOTO, handle_photo))
+    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
 
-            # Manual initialization with timeout handling
-            await app.initialize()
-            log.info("Bot initialized ✓")
-
-            # Notify owner
+    # Post-init: notify owner
+    async def post_init(application):
+        for attempt in range(3):
             try:
-                await app.bot.send_message(chat_id=OWNER_CHAT_ID, text=(
-                    "🚀 *OmniCloud AI v2 — Online!*\n━━━━━━━━━━━━━━━━━\n\n"
-                    f"🧠 `{LLM_MODEL.split('/')[-1]}`\n"
-                    f"🛠 {len(TOOLS)} أداة\n"
-                    f"☁️ {len(platforms)} منصات: {', '.join(platforms)}\n"
-                    f"⏱ {datetime.now(timezone.utc).strftime('%H:%M UTC')}\n\n"
-                    "/start لرؤية القدرات 🤖"
-                ), parse_mode=ParseMode.MARKDOWN)
-            except Exception as e: log.warning(f"Notify: {e}")
+                await application.bot.send_message(
+                    chat_id=OWNER_CHAT_ID,
+                    text=(
+                        "🚀 *OmniCloud AI v2 — Online (Webhook)!*\n━━━━━━━━━━━━━━━━━\n\n"
+                        f"🧠 `{LLM_MODEL.split('/')[-1]}`\n"
+                        f"🛠 {len(TOOLS)} أداة\n"
+                        f"☁️ {len(platforms)} منصات: {', '.join(platforms)}\n"
+                        f"⏱ {datetime.now(timezone.utc).strftime('%H:%M UTC')}\n\n"
+                        "/start لرؤية القدرات 🤖"
+                    ),
+                    parse_mode=ParseMode.MARKDOWN,
+                )
+                break
+            except Exception as e:
+                log.warning(f"Notify attempt {attempt+1}: {e}")
+                time.sleep(5)
 
-            # Start polling
-            await app.updater.start_polling(drop_pending_updates=True)
-            await app.start()
-            log.info("Polling started ✓")
+    app.post_init = post_init
 
-            # Keep running
-            while True:
-                await asyncio.sleep(3600)
+    log.info(f"Starting webhook on 0.0.0.0:{PORT} → {WEBHOOK_URL}")
+    app.run_webhook(
+        listen="0.0.0.0",
+        port=PORT,
+        url_path="/webhook",
+        webhook_url=WEBHOOK_URL,
+        drop_pending_updates=True,
+    )
 
-        except Exception as e:
-            log.error(f"Attempt {attempt+1} failed: {e}")
-            try: await app.shutdown()
-            except: pass
-            if attempt < 4:
-                wait = 10 * (attempt + 1)
-                log.info(f"Retrying in {wait}s...")
-                await asyncio.sleep(wait)
-            else:
-                log.error("All attempts failed. Exiting.")
-                raise
-
-
-def main():
-    asyncio.run(run_bot())
 
 if __name__ == "__main__":
     main()
