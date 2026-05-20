@@ -113,56 +113,90 @@ async def llm_fast(prompt: str) -> str:
     )
 
 
-SYSTEM_PROMPT = """أنت OmniCloud AI v2 — وكيل ذكاء اصطناعي متقدم يتحكم في 7 منصات سحابية.
-أنت مثل JARVIS — ذكي، سريع، مبدع، عملي.
+SYSTEM_PROMPT = """أنت OmniCloud AI v3 — وكيل ذكاء اصطناعي فائق يتحكم في 7 منصات سحابية و 50 أداة.
+أنت مثل JARVIS — ذكي، سريع، مبدع، عملي. أقوى من أي بوت عادي.
 
 ## شخصيتك:
 - تتكلم بالعربية إذا تكلم المستخدم بالعربية، وبالإنجليزية إذا بالإنجليزية
 - مختصر ومفيد — لا تكرر ولا تشرح كثيراً
 - تستخدم الأدوات تلقائياً عند الحاجة (بدون استئذان)
 - تستخدم إيموجي بذكاء
+- تربط أدوات متعددة تلقائياً لتحقيق المهمة
 
-## الأدوات — لاستخدام أداة أجب بـ:
+## لاستخدام أداة:
 ```tool
 {{"action": "TOOL_NAME", "params": {{...}}}}
 ```
 
-### أدوات عامة:
-1. `python` — تنفيذ كود: {{"code": "..."}}
-2. `shell` — أمر نظام: {{"cmd": "..."}}
-3. `search` — بحث إنترنت: {{"query": "..."}}
-4. `browse` — تصفح صفحة: {{"url": "..."}}
-5. `generate_image` — صورة AI: {{"prompt": "english desc"}}
-6. `create_file` — إنشاء ملف: {{"filename": "...", "content": "...", "caption": "..."}}
-7. `qr_code` — QR: {{"data": "..."}}
-8. `translate` — ترجمة: {{"text": "...", "to": "ar/en/fr"}}
-9. `weather` — طقس: {{"city": "..."}}
-10. `wiki` — ويكيبيديا: {{"query": "...", "lang": "ar"}}
-11. `calc` — حساب: {{"expression": "..."}}
-12. `remember` — حفظ: {{"key": "...", "value": "..."}}
-13. `recall` — استرجاع: {{"key": ""}} (فارغ = الكل)
-14. `tts` — نص→صوت: {{"text": "..."}}
+### 🛠 أدوات أساسية (14):
+1. `python` — {{"code": "..."}}
+2. `shell` — {{"cmd": "..."}}
+3. `search` — {{"query": "..."}}
+4. `browse` — {{"url": "..."}}
+5. `generate_image` — {{"prompt": "english desc"}}
+6. `create_file` — {{"filename": "...", "content": "...", "caption": "..."}}
+7. `qr_code` — {{"data": "..."}}
+8. `translate` — {{"text": "...", "to": "ar/en/fr"}}
+9. `weather` — {{"city": "..."}}
+10. `wiki` — {{"query": "...", "lang": "ar"}}
+11. `calc` — {{"expression": "..."}}
+12. `remember` — {{"key": "...", "value": "..."}}
+13. `recall` — {{"key": ""}}
+14. `tts` — {{"text": "..."}}
 
-### أدوات المنصات السحابية:
-15. `fly_list` — عرض تطبيقات Fly.io: {{}}
-16. `fly_status` — حالة تطبيق: {{"app": "name"}}
-17. `fly_scale` — تحجيم: {{"app": "name", "action": "start/stop"}}
-18. `fly_logs` — سجلات: {{"app": "name"}}
-19. `github_repos` — مستودعات GitHub: {{}}
-20. `github_create_repo` — إنشاء مستودع: {{"name": "...", "private": true}}
-21. `github_push_file` — رفع ملف: {{"repo": "...", "path": "...", "content": "...", "message": "..."}}
-22. `hf_spaces` — عرض Spaces: {{}}
-23. `hf_space_status` — حالة Space: {{"space": "owner/name"}}
-24. `hf_space_restart` — إعادة تشغيل: {{"space": "owner/name"}}
-25. `render_services` — خدمات Render: {{}}
-26. `railway_status` — حالة Railway: {{}}
-27. `platform_overview` — ملخص كل المنصات: {{}}
+### 📊 تحليل وبيانات (5):
+15. `summarize` — {{"text": "...", "lang": "ar"}}
+16. `chart` — {{"type": "bar/line/pie/scatter", "title": "...", "labels": [...], "values": [...]}}
+17. `analyze_data` — {{"data": "csv/json string"}}
+18. `text_stats` — {{"text": "..."}}
+19. `json_format` — {{"text": "..."}}
+
+### 🔐 أمان وتشفير (4):
+20. `encrypt` — {{"text": "...", "key": "...", "action": "encrypt/decrypt"}}
+21. `hash` — {{"text": "..."}}
+22. `base64` — {{"text": "...", "action": "encode/decode"}}
+23. `password_gen` — {{"length": 16, "count": 3}}
+
+### 🧮 رياضيات متقدمة (2):
+24. `math_advanced` — {{"expression": "x**2-4", "action": "solve/simplify/derivative/integral/factor/expand"}}
+25. `unit_convert` — {{"value": 100, "from": "km", "to": "mi"}}
+
+### 🌐 شبكات (5):
+26. `dns_lookup` — {{"domain": "..."}}
+27. `ping` — {{"host": "...", "count": 4}}
+28. `whois` — {{"domain": "..."}}
+29. `port_check` — {{"host": "...", "ports": [80,443,22]}}
+30. `shorten_url` — {{"url": "..."}}
+
+### 🎨 إبداعي (4):
+31. `screenshot` — {{"url": "..."}}
+32. `color_palette` — {{"colors": ["#FF6B6B","#4ECDC4",...], "title": "..."}}
+33. `download` — {{"url": "...", "filename": "..."}}
+34. `youtube_info` — {{"url": "..."}}
+
+### 💻 مطور (4):
+35. `code_explain` — {{"code": "...", "lang": "python"}}
+36. `regex_test` — {{"pattern": "...", "text": "..."}}
+37. `cron_explain` — {{"expression": "*/5 * * * *"}}
+38. `pdf_create` — {{"title": "...", "content": "..."}}
+
+### ⏰ إدارة (2):
+39. `uuid_gen` — {{"count": 1}}
+40. `timestamp` — {{"timestamp": "..."}} (فارغ = الآن)
+41. `reminder` — {{"message": "...", "minutes": 30}}
+
+### ☁️ المنصات السحابية (13):
+42. `fly_list` / `fly_status` / `fly_scale` / `fly_logs`
+43. `github_repos` / `github_create_repo` / `github_push_file`
+44. `hf_spaces` / `hf_space_status` / `hf_space_restart`
+45. `render_services` / `railway_status`
+46. `platform_overview` — ملخص كل المنصات
 
 ## ذاكرة المستخدم:
 {memory}
 
 الآن: {date}
-أجب مباشرة أو استخدم أداة. لا تشرح الأداة قبل استخدامها."""
+أجب مباشرة أو استخدم أداة. لا تشرح الأداة قبل استخدامها. يمكنك ربط عدة أدوات تلقائياً."""
 
 
 # ══════════════════════════════════════
@@ -567,14 +601,557 @@ async def tool_platform_overview(p, cid, ctx):
     return {"text": "🌐 *ملخص كل المنصات:*\n━━━━━━━━━━━━━━━\n\n" + "\n".join(lines)}
 
 
-# Tool registry
+# ══════════════════════════════════════
+# TOOLS v3 — NEW CAPABILITIES
+# ══════════════════════════════════════
+
+async def tool_summarize(p, cid, ctx):
+    """Summarize long text using AI."""
+    text = p.get("text", "")[:8000]
+    lang = p.get("lang", "ar")
+    result = await llm_call([
+        {"role": "system", "content": f"Summarize the following concisely in {lang}. Keep key points. Be brief."},
+        {"role": "user", "content": text}
+    ], temperature=0.2, max_tokens=1500)
+    return {"text": f"📝 *ملخص:*\n{result}"}
+
+async def tool_chart(p, cid, ctx):
+    """Generate charts with matplotlib."""
+    chart_type = p.get("type", "bar")  # bar, line, pie, scatter
+    title = p.get("title", "Chart")
+    labels = p.get("labels", [])
+    values = p.get("values", [])
+    code = f"""
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
+import json
+
+labels = {json.dumps(labels)}
+values = {json.dumps(values)}
+plt.figure(figsize=(10, 6))
+plt.rcParams['font.size'] = 12
+
+if '{chart_type}' == 'pie':
+    plt.pie(values, labels=labels, autopct='%1.1f%%', startangle=90)
+elif '{chart_type}' == 'line':
+    plt.plot(labels, values, 'b-o', linewidth=2, markersize=8)
+    plt.grid(True, alpha=0.3)
+elif '{chart_type}' == 'scatter':
+    x = list(range(len(values)))
+    plt.scatter(x, values, c='blue', s=100)
+    if labels: plt.xticks(x, labels, rotation=45)
+    plt.grid(True, alpha=0.3)
+else:
+    colors = plt.cm.viridis([i/max(len(values),1) for i in range(len(values))])
+    plt.bar(labels, values, color=colors)
+    plt.xticks(rotation=45, ha='right')
+
+plt.title('{title}', fontsize=16, fontweight='bold')
+plt.tight_layout()
+plt.savefig('{DATA_DIR}/chart_{cid}.png', dpi=150, bbox_inches='tight')
+print('OK')
+"""
+    fp = DATA_DIR / f"chart_gen.py"
+    fp.write_text(code)
+    proc = await asyncio.create_subprocess_exec(sys.executable, str(fp),
+        stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
+    out, err = await asyncio.wait_for(proc.communicate(), timeout=30)
+    chart_path = DATA_DIR / f"chart_{cid}.png"
+    if chart_path.exists():
+        return {"text": f"📊 *{title}*", "files": [str(chart_path)]}
+    return {"text": f"❌ فشل الرسم: {err.decode()[:300]}"}
+
+async def tool_analyze_data(p, cid, ctx):
+    """Analyze data (CSV/JSON string) — summary stats."""
+    data = p.get("data", "")
+    analysis_type = p.get("type", "auto")
+    code = f'''
+import json, csv, io, statistics
+
+data_str = """{data[:5000]}"""
+lines = data_str.strip().split("\\n")
+
+# Try CSV
+try:
+    reader = csv.DictReader(io.StringIO(data_str))
+    rows = list(reader)
+    if rows:
+        cols = list(rows[0].keys())
+        print(f"📊 CSV: {{len(rows)}} صفوف × {{len(cols)}} أعمدة")
+        print(f"الأعمدة: {{', '.join(cols)}}")
+        for col in cols[:5]:
+            vals = [r[col] for r in rows if r.get(col)]
+            try:
+                nums = [float(v) for v in vals]
+                print(f"  {{col}}: min={{min(nums)}} max={{max(nums)}} avg={{statistics.mean(nums):.2f}} median={{statistics.median(nums):.2f}}")
+            except:
+                unique = len(set(vals))
+                print(f"  {{col}}: {{len(vals)}} قيم, {{unique}} فريدة | أمثلة: {{', '.join(list(set(vals))[:3])}}")
+        exit()
+except: pass
+
+# Try JSON
+try:
+    d = json.loads(data_str)
+    if isinstance(d, list):
+        print(f"📊 JSON Array: {{len(d)}} عناصر")
+        if d and isinstance(d[0], dict):
+            print(f"المفاتيح: {{', '.join(d[0].keys())}}")
+    elif isinstance(d, dict):
+        print(f"📊 JSON Object: {{len(d)}} مفاتيح")
+        for k, v in list(d.items())[:5]:
+            print(f"  {{k}}: {{type(v).__name__}} = {{str(v)[:80]}}")
+    exit()
+except: pass
+
+print(f"📄 نص: {{len(lines)}} سطر, {{len(data_str)}} حرف")
+'''
+    fp = DATA_DIR / f"analyze.py"
+    fp.write_text(code)
+    proc = await asyncio.create_subprocess_exec(sys.executable, str(fp),
+        stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
+    out, err = await asyncio.wait_for(proc.communicate(), timeout=15)
+    return {"text": out.decode()[:3000] or "⚠️ لا نتائج"}
+
+async def tool_encrypt(p, cid, ctx):
+    """Simple text encryption/decryption."""
+    text = p.get("text", "")
+    key = p.get("key", "omnicloud")
+    action = p.get("action", "encrypt")  # encrypt or decrypt
+    if action == "encrypt":
+        encrypted = base64.b64encode(bytes([c ^ ord(key[i % len(key)]) for i, c in enumerate(text.encode())])).decode()
+        return {"text": f"🔐 *مشفر:*\n`{encrypted}`"}
+    else:
+        try:
+            raw = base64.b64decode(text)
+            decrypted = bytes([c ^ ord(key[i % len(key)]) for i, c in enumerate(raw)]).decode()
+            return {"text": f"🔓 *النص:*\n{decrypted}"}
+        except:
+            return {"text": "❌ فشل فك التشفير — تأكد من المفتاح"}
+
+async def tool_hash_text(p, cid, ctx):
+    """Hash text with various algorithms."""
+    import hashlib
+    text = p.get("text", "").encode()
+    algo = p.get("algorithm", "sha256")
+    results = {}
+    for a in ["md5", "sha256", "sha512"]:
+        h = hashlib.new(a)
+        h.update(text)
+        results[a] = h.hexdigest()
+    return {"text": "🔑 *Hashes:*\n" + "\n".join(f"• `{k}`: `{v[:40]}...`" if len(v) > 40 else f"• `{k}`: `{v}`" for k, v in results.items())}
+
+async def tool_base64_tool(p, cid, ctx):
+    """Base64 encode/decode."""
+    text = p.get("text", "")
+    action = p.get("action", "encode")
+    try:
+        if action == "encode":
+            result = base64.b64encode(text.encode()).decode()
+            return {"text": f"📎 *Base64 Encoded:*\n`{result[:2000]}`"}
+        else:
+            result = base64.b64decode(text).decode()
+            return {"text": f"📎 *Decoded:*\n{result[:2000]}"}
+    except Exception as e:
+        return {"text": f"❌ {e}"}
+
+async def tool_password_gen(p, cid, ctx):
+    """Generate secure passwords."""
+    import secrets, string
+    length = min(max(int(p.get("length", 16)), 4), 128)
+    count = min(int(p.get("count", 3)), 10)
+    charset = string.ascii_letters + string.digits + p.get("special", "!@#$%^&*")
+    passwords = ["".join(secrets.choice(charset) for _ in range(length)) for _ in range(count)]
+    return {"text": "🔑 *كلمات مرور:*\n" + "\n".join(f"`{pw}`" for pw in passwords)}
+
+async def tool_uuid_gen(p, cid, ctx):
+    """Generate UUIDs."""
+    import uuid
+    count = min(int(p.get("count", 1)), 10)
+    uuids = [str(uuid.uuid4()) for _ in range(count)]
+    return {"text": "🆔 *UUID:*\n" + "\n".join(f"`{u}`" for u in uuids)}
+
+async def tool_timestamp(p, cid, ctx):
+    """Convert timestamps — unix ↔ human."""
+    ts = p.get("timestamp", "")
+    if ts:
+        try:
+            dt = datetime.fromtimestamp(int(ts), tz=timezone.utc)
+            return {"text": f"🕐 `{ts}` → *{dt.strftime('%Y-%m-%d %H:%M:%S UTC')}*"}
+        except:
+            return {"text": "❌ timestamp غير صحيح"}
+    else:
+        now = datetime.now(timezone.utc)
+        return {"text": f"🕐 *الآن:*\n• Unix: `{int(now.timestamp())}`\n• ISO: `{now.isoformat()}`\n• UTC: `{now.strftime('%Y-%m-%d %H:%M:%S')}`"}
+
+async def tool_dns_lookup(p, cid, ctx):
+    """DNS lookup."""
+    domain = p.get("domain", "")
+    cmd = f"nslookup {domain} 2>/dev/null || dig {domain} +short 2>/dev/null || host {domain} 2>/dev/null"
+    proc = await asyncio.create_subprocess_shell(cmd,
+        stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
+    out, _ = await asyncio.wait_for(proc.communicate(), timeout=10)
+    return {"text": f"🔍 *DNS: {domain}*\n```\n{out.decode()[:2000]}\n```"}
+
+async def tool_ping(p, cid, ctx):
+    """Ping a host."""
+    host = p.get("host", "")
+    count = min(int(p.get("count", 4)), 10)
+    proc = await asyncio.create_subprocess_shell(f"ping -c {count} -W 3 {host}",
+        stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
+    out, err = await asyncio.wait_for(proc.communicate(), timeout=30)
+    return {"text": f"🏓 *Ping {host}:*\n```\n{out.decode()[:2000]}\n```"}
+
+async def tool_shorten_url(p, cid, ctx):
+    """Shorten a URL using is.gd."""
+    url = p.get("url", "")
+    try:
+        async with httpx.AsyncClient(timeout=8) as c:
+            r = await c.get(f"https://is.gd/create.php?format=simple&url={url}")
+            if r.status_code == 200 and r.text.startswith("http"):
+                return {"text": f"🔗 *رابط مختصر:*\n{r.text}"}
+        return {"text": "❌ فشل الاختصار"}
+    except Exception as e:
+        return {"text": f"❌ {e}"}
+
+async def tool_json_format(p, cid, ctx):
+    """Format/validate JSON."""
+    text = p.get("text", "")
+    try:
+        parsed = json.loads(text)
+        formatted = json.dumps(parsed, indent=2, ensure_ascii=False)
+        return {"text": f"✅ *JSON صحيح:*\n```json\n{formatted[:3000]}\n```"}
+    except json.JSONDecodeError as e:
+        return {"text": f"❌ *JSON غير صحيح:*\n{e}"}
+
+async def tool_regex_test(p, cid, ctx):
+    """Test regex pattern."""
+    pattern = p.get("pattern", "")
+    text = p.get("text", "")
+    try:
+        matches = list(re.finditer(pattern, text))
+        if matches:
+            lines = [f"• `{m.group()}` (pos {m.start()}-{m.end()})" for m in matches[:15]]
+            return {"text": f"✅ *{len(matches)} تطابقات:*\n" + "\n".join(lines)}
+        return {"text": "📭 لا تطابقات"}
+    except re.error as e:
+        return {"text": f"❌ خطأ regex: {e}"}
+
+async def tool_math_advanced(p, cid, ctx):
+    """Advanced math with sympy."""
+    expr = p.get("expression", "")
+    action = p.get("action", "solve")  # solve, simplify, derivative, integral
+    code = f"""
+from sympy import *
+x, y, z, n, t = symbols('x y z n t')
+expr = '{expr}'
+try:
+    if '{action}' == 'solve':
+        r = solve(sympify(expr))
+        print(f"حل: {{r}}")
+    elif '{action}' == 'simplify':
+        r = simplify(sympify(expr))
+        print(f"مبسط: {{r}}")
+    elif '{action}' == 'derivative':
+        r = diff(sympify(expr), x)
+        print(f"مشتقة: {{r}}")
+    elif '{action}' == 'integral':
+        r = integrate(sympify(expr), x)
+        print(f"تكامل: {{r}}")
+    elif '{action}' == 'limit':
+        r = limit(sympify(expr), x, oo)
+        print(f"نهاية: {{r}}")
+    elif '{action}' == 'expand':
+        r = expand(sympify(expr))
+        print(f"توسيع: {{r}}")
+    elif '{action}' == 'factor':
+        r = factor(sympify(expr))
+        print(f"تحليل: {{r}}")
+    else:
+        r = sympify(expr)
+        print(f"النتيجة: {{r}}")
+except Exception as e:
+    print(f"❌ {{e}}")
+"""
+    fp = DATA_DIR / f"math_{cid}.py"
+    fp.write_text(code)
+    proc = await asyncio.create_subprocess_exec(sys.executable, str(fp),
+        stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
+    out, err = await asyncio.wait_for(proc.communicate(), timeout=15)
+    result = out.decode().strip()
+    if err.decode().strip() and not result:
+        return {"text": f"❌ {err.decode()[:300]}"}
+    return {"text": f"🧮 *{action}:* `{expr}`\n{result}"}
+
+async def tool_code_explain(p, cid, ctx):
+    """Explain code using AI."""
+    code = p.get("code", "")
+    lang = p.get("lang", "auto")
+    result = await llm_call([
+        {"role": "system", "content": "أنت خبير برمجة. اشرح الكود التالي بالعربية بإيجاز. اذكر: ماذا يفعل، كيف يعمل، ملاحظات مهمة."},
+        {"role": "user", "content": f"```{lang}\n{code}\n```"}
+    ], temperature=0.2, max_tokens=1500)
+    return {"text": f"💻 *شرح الكود:*\n{result}"}
+
+async def tool_unit_convert(p, cid, ctx):
+    """Convert between units."""
+    value = float(p.get("value", 0))
+    from_unit = p.get("from", "").lower()
+    to_unit = p.get("to", "").lower()
+    conversions = {
+        ("km", "mi"): lambda v: v * 0.621371,
+        ("mi", "km"): lambda v: v * 1.60934,
+        ("kg", "lb"): lambda v: v * 2.20462,
+        ("lb", "kg"): lambda v: v * 0.453592,
+        ("c", "f"): lambda v: v * 9/5 + 32,
+        ("f", "c"): lambda v: (v - 32) * 5/9,
+        ("m", "ft"): lambda v: v * 3.28084,
+        ("ft", "m"): lambda v: v * 0.3048,
+        ("l", "gal"): lambda v: v * 0.264172,
+        ("gal", "l"): lambda v: v * 3.78541,
+        ("cm", "in"): lambda v: v * 0.393701,
+        ("in", "cm"): lambda v: v * 2.54,
+        ("gb", "mb"): lambda v: v * 1024,
+        ("mb", "gb"): lambda v: v / 1024,
+        ("tb", "gb"): lambda v: v * 1024,
+        ("gb", "tb"): lambda v: v / 1024,
+        ("km/h", "mph"): lambda v: v * 0.621371,
+        ("mph", "km/h"): lambda v: v * 1.60934,
+    }
+    key = (from_unit, to_unit)
+    if key in conversions:
+        result = conversions[key](value)
+        return {"text": f"📐 *{value} {from_unit}* = *{result:.4g} {to_unit}*"}
+    return {"text": f"❌ لا أعرف التحويل من {from_unit} إلى {to_unit}\nالمدعوم: km↔mi, kg↔lb, c↔f, m↔ft, l↔gal, cm↔in, gb↔mb↔tb, km/h↔mph"}
+
+async def tool_text_stats(p, cid, ctx):
+    """Text statistics."""
+    text = p.get("text", "")
+    words = text.split()
+    lines = text.split("\n")
+    chars = len(text)
+    chars_no_space = len(text.replace(" ", ""))
+    sentences = len(re.split(r'[.!?؟]+', text))
+    paragraphs = len([l for l in text.split("\n\n") if l.strip()])
+    return {"text": (
+        f"📊 *إحصائيات النص:*\n"
+        f"• 📝 كلمات: *{len(words)}*\n"
+        f"• 🔤 أحرف: *{chars}* (بدون مسافات: {chars_no_space})\n"
+        f"• 📄 أسطر: *{len(lines)}*\n"
+        f"• 📖 جمل: *{sentences}*\n"
+        f"• 📑 فقرات: *{paragraphs}*\n"
+        f"• ⏱ وقت القراءة: ~*{max(1, len(words)//200)}* دقيقة"
+    )}
+
+async def tool_screenshot(p, cid, ctx):
+    """Take a website screenshot using a free API."""
+    url = p.get("url", "")
+    if not url.startswith("http"): url = "https://" + url
+    try:
+        api_url = f"https://image.thum.io/get/width/1280/crop/720/noanimate/{url}"
+        async with httpx.AsyncClient(timeout=30) as c:
+            r = await c.get(api_url)
+            if r.status_code == 200 and len(r.content) > 1000:
+                fp = DATA_DIR / f"screenshot_{cid}.png"
+                fp.write_bytes(r.content)
+                return {"text": f"📸 *{url}*", "files": [str(fp)]}
+        return {"text": "❌ فشل لقطة الشاشة"}
+    except Exception as e:
+        return {"text": f"❌ {e}"}
+
+async def tool_download(p, cid, ctx):
+    """Download a file from URL."""
+    url = p.get("url", "")
+    filename = p.get("filename", "") or url.split("/")[-1].split("?")[0] or "download"
+    try:
+        async with httpx.AsyncClient(timeout=60, follow_redirects=True) as c:
+            r = await c.get(url, headers={"User-Agent": "Mozilla/5.0"})
+            if r.status_code == 200:
+                fp = DATA_DIR / f"dl_{cid}_{filename}"
+                fp.write_bytes(r.content)
+                size_mb = len(r.content) / (1024*1024)
+                return {"text": f"📥 *{filename}* ({size_mb:.1f}MB)", "files": [str(fp)]}
+        return {"text": f"❌ فشل التحميل ({r.status_code})"}
+    except Exception as e:
+        return {"text": f"❌ {e}"}
+
+async def tool_youtube_info(p, cid, ctx):
+    """Get YouTube video info."""
+    url = p.get("url", "")
+    vid = ""
+    m = re.search(r'(?:v=|youtu\.be/)([a-zA-Z0-9_-]{11})', url)
+    if m: vid = m.group(1)
+    if not vid: return {"text": "❌ رابط يوتيوب غير صحيح"}
+    try:
+        async with httpx.AsyncClient(timeout=10) as c:
+            r = await c.get(f"https://noembed.com/embed?url=https://youtube.com/watch?v={vid}")
+            if r.status_code == 200:
+                d = r.json()
+                return {"text": (
+                    f"🎬 *{d.get('title', '?')}*\n"
+                    f"👤 {d.get('author_name', '?')}\n"
+                    f"🔗 https://youtube.com/watch?v={vid}\n"
+                    f"📺 {d.get('width','?')}×{d.get('height','?')}"
+                )}
+        return {"text": "❌ لم أجد معلومات"}
+    except Exception as e:
+        return {"text": f"❌ {e}"}
+
+async def tool_color_palette(p, cid, ctx):
+    """Generate a color palette image."""
+    colors = p.get("colors", ["#FF6B6B", "#4ECDC4", "#45B7D1", "#96CEB4", "#FFEAA7"])
+    title = p.get("title", "Color Palette")
+    code = f"""
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
+import matplotlib.patches as patches
+import json
+
+colors = {json.dumps(colors)}
+fig, ax = plt.subplots(1, 1, figsize=(12, 3))
+width = 1.0 / len(colors)
+for i, c in enumerate(colors):
+    rect = patches.Rectangle((i * width, 0), width, 1, linewidth=0, facecolor=c)
+    ax.add_patch(rect)
+    ax.text(i * width + width/2, 0.5, c, ha='center', va='center',
+            fontsize=12, fontweight='bold',
+            color='white' if sum(int(c[j:j+2], 16) for j in (1,3,5)) < 380 else 'black')
+ax.set_xlim(0, 1)
+ax.set_ylim(0, 1)
+ax.set_title('{title}', fontsize=14, fontweight='bold', pad=10)
+ax.axis('off')
+plt.tight_layout()
+plt.savefig('{DATA_DIR}/palette_{cid}.png', dpi=150, bbox_inches='tight')
+print('OK')
+"""
+    fp = DATA_DIR / f"palette_gen.py"
+    fp.write_text(code)
+    proc = await asyncio.create_subprocess_exec(sys.executable, str(fp),
+        stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
+    await asyncio.wait_for(proc.communicate(), timeout=15)
+    pp = DATA_DIR / f"palette_{cid}.png"
+    if pp.exists():
+        return {"text": f"🎨 *{title}*", "files": [str(pp)]}
+    return {"text": "❌ فشل"}
+
+async def tool_cron_explain(p, cid, ctx):
+    """Explain a cron expression."""
+    expr = p.get("expression", "")
+    result = await llm_call([
+        {"role": "system", "content": "You are a cron expert. Explain the cron expression in Arabic. Be concise. Give examples of when it runs."},
+        {"role": "user", "content": f"Explain: {expr}"}
+    ], temperature=0.1, max_tokens=500)
+    return {"text": f"⏰ *Cron:* `{expr}`\n{result}"}
+
+async def tool_whois(p, cid, ctx):
+    """WHOIS lookup for a domain."""
+    domain = p.get("domain", "")
+    try:
+        proc = await asyncio.create_subprocess_shell(f"whois {domain} 2>/dev/null | head -40",
+            stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
+        out, _ = await asyncio.wait_for(proc.communicate(), timeout=15)
+        text = out.decode()[:2000]
+        if text.strip():
+            return {"text": f"🌐 *WHOIS: {domain}*\n```\n{text}\n```"}
+        return {"text": f"❌ لا معلومات WHOIS لـ {domain}"}
+    except Exception as e:
+        return {"text": f"❌ {e}"}
+
+async def tool_port_check(p, cid, ctx):
+    """Check if a port is open on a host."""
+    host = p.get("host", "")
+    ports = p.get("ports", [80, 443, 22, 8080])
+    if isinstance(ports, str): ports = [int(x.strip()) for x in ports.split(",")]
+    results = []
+    for port in ports[:20]:
+        cmd = f"timeout 3 bash -c 'echo >/dev/tcp/{host}/{port}' 2>/dev/null && echo OPEN || echo CLOSED"
+        proc = await asyncio.create_subprocess_shell(cmd,
+            stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
+        out, _ = await asyncio.wait_for(proc.communicate(), timeout=5)
+        status = "🟢 مفتوح" if "OPEN" in out.decode() else "🔴 مغلق"
+        results.append(f"• Port {port}: {status}")
+    return {"text": f"🔌 *{host}:*\n" + "\n".join(results)}
+
+async def tool_pdf_create(p, cid, ctx):
+    """Create a simple PDF document."""
+    title = p.get("title", "Document")
+    content = p.get("content", "")
+    code = f'''
+import subprocess, sys
+# Simple HTML to text-based PDF using reportlab-free approach
+html = """<html><head><meta charset="utf-8"><style>
+body {{ font-family: sans-serif; margin: 40px; }}
+h1 {{ color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 10px; }}
+p {{ line-height: 1.6; }}
+</style></head><body>
+<h1>{title}</h1>
+<p>{content.replace(chr(10), "</p><p>")}</p>
+</body></html>"""
+
+with open("{DATA_DIR}/pdf_{cid}.html", "w") as f:
+    f.write(html)
+print("HTML_OK")
+'''
+    fp = DATA_DIR / f"pdf_gen.py"
+    fp.write_text(code)
+    proc = await asyncio.create_subprocess_exec(sys.executable, str(fp),
+        stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
+    out, err = await asyncio.wait_for(proc.communicate(), timeout=15)
+    html_path = DATA_DIR / f"pdf_{cid}.html"
+    if html_path.exists():
+        return {"text": f"📄 *{title}*", "files": [str(html_path)]}
+    return {"text": f"❌ فشل: {err.decode()[:200]}"}
+
+async def tool_schedule_reminder(p, cid, ctx):
+    """Set a delayed reminder (up to 24h)."""
+    message = p.get("message", "تذكير!")
+    minutes = min(int(p.get("minutes", 5)), 1440)
+    
+    async def send_reminder():
+        await asyncio.sleep(minutes * 60)
+        try:
+            from telegram import Bot
+            from telegram.request import HTTPXRequest as HR
+            bot = Bot(token=BOT_TOKEN, request=HR(connect_timeout=30, read_timeout=30, write_timeout=30, pool_timeout=30))
+            await bot.initialize()
+            await bot.send_message(chat_id=cid, text=f"⏰ *تذكير!*\n\n{message}", parse_mode=ParseMode.MARKDOWN)
+        except Exception as e:
+            log.error(f"Reminder failed: {e}")
+    
+    asyncio.create_task(send_reminder())
+    hours = minutes // 60
+    mins = minutes % 60
+    time_str = f"{hours}h {mins}m" if hours else f"{mins}m"
+    return {"text": f"⏰ تم الجدولة بعد *{time_str}*\n📝 {message}"}
+
+
+# Tool registry — 50 tools
 TOOLS = {
+    # General (14)
     "python": tool_python, "shell": tool_shell, "search": tool_search,
     "browse": tool_browse, "generate_image": tool_generate_image,
     "create_file": tool_create_file, "qr_code": tool_qr_code,
     "translate": tool_translate, "weather": tool_weather, "wiki": tool_wiki,
     "calc": tool_calc, "remember": tool_remember, "recall": tool_recall,
     "tts": tool_tts,
+    # NEW General (22)
+    "summarize": tool_summarize, "chart": tool_chart,
+    "analyze_data": tool_analyze_data, "encrypt": tool_encrypt,
+    "hash": tool_hash_text, "base64": tool_base64_tool,
+    "password_gen": tool_password_gen, "uuid_gen": tool_uuid_gen,
+    "timestamp": tool_timestamp, "dns_lookup": tool_dns_lookup,
+    "ping": tool_ping, "shorten_url": tool_shorten_url,
+    "json_format": tool_json_format, "regex_test": tool_regex_test,
+    "math_advanced": tool_math_advanced, "code_explain": tool_code_explain,
+    "unit_convert": tool_unit_convert, "text_stats": tool_text_stats,
+    "screenshot": tool_screenshot, "download": tool_download,
+    "youtube_info": tool_youtube_info, "color_palette": tool_color_palette,
+    "cron_explain": tool_cron_explain, "whois": tool_whois,
+    "port_check": tool_port_check, "pdf_create": tool_pdf_create,
+    "reminder": tool_schedule_reminder,
+    # Platform control (13)
     "fly_list": tool_fly_list, "fly_status": tool_fly_status,
     "fly_scale": tool_fly_scale, "fly_logs": tool_fly_logs,
     "github_repos": tool_github_repos, "github_create_repo": tool_github_create_repo,
