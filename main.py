@@ -873,7 +873,7 @@ def main():
     # Longer timeouts for HF Space network
     from telegram.request import HTTPXRequest
     request = HTTPXRequest(connect_timeout=30, read_timeout=30, write_timeout=30, pool_timeout=30)
-    app = Application.builder().token(BOT_TOKEN).request(request).connect_timeout(30).read_timeout(30).write_timeout(30).pool_timeout(30).build()
+    app = Application.builder().token(BOT_TOKEN).request(request).build()
     for cmd, fn in [("start",cmd_start),("help",cmd_start),("status",cmd_status),
                     ("clear",cmd_clear),("model",cmd_model),("run",cmd_run),
                     ("sh",cmd_sh),("img",cmd_img),("platforms",cmd_platforms)]:
