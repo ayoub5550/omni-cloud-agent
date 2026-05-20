@@ -871,16 +871,25 @@ async def health_handler(request):
 
 
 async def webhook_handler(request):
-    """Receive Telegram updates via webhook."""
+    """Receive Telegram updates via webhook — return 200 immediately, process in background."""
     if not tg_ready or tg_app is None:
         return web.Response(status=503, text="Bot not ready")
     try:
         data = await request.json()
         update = Update.de_json(data, tg_app.bot)
+        # Process in background so Telegram gets instant 200
+        asyncio.create_task(_safe_process(update))
+    except Exception as e:
+        log.error(f"Webhook parse error: {e}")
+    return web.Response(status=200, text="ok")
+
+
+async def _safe_process(update):
+    """Process a Telegram update with error handling."""
+    try:
         await tg_app.process_update(update)
     except Exception as e:
-        log.error(f"Webhook error: {e}")
-    return web.Response(status=200, text="ok")
+        log.error(f"Update processing error: {e}")
 
 
 async def init_telegram_bot():
